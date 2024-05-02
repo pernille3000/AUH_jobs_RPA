@@ -1,2 +1,4 @@
 # RM_jobs_RPA
-Sender mail med jobs i Region Midt.
+Web scraping af jobs på hjemmeside. 
+Laver beregning i Excel 
+Sender mail med resultatet
