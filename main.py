@@ -17,21 +17,29 @@ def main():
 
         # Extract the outer HTML content of the table element
         table_html = table_element.get_attribute('outerHTML')
-        print(table_html)
+    
         # Parse HTML content using BeautifulSoup
         soup = BeautifulSoup(table_html, 'html.parser')
 
-        # Find all table rows and extract data
-        rows = soup.find_all('div')
-        
-        data = []
-        for row in rows:
-            cols = row.find_all('td')
-            cols = [col.get_text(strip=True) for col in cols]
-            data.append(cols)
+        # Find column names (assuming they are in the first row)
+        column_names = []
+        header_row = soup.find('div', class_='css_jobsAdvRow')
+        if header_row:
+            columns = header_row.find_all('div', class_='css_jobsAdvCell') 
+            column_names = [col.get_text(strip=True) for col in columns]
 
-        # Create DataFrame from extracted data
-        df = pd.DataFrame(data, columns=['Firm Name', 'Last Name', 'First Name'])
+        # Find all table rows containing data
+        data_rows = soup.find_all('div', class_='css_jobsAdvRow')
+
+        # Extract data from each row
+        data = []
+        for row in data_rows:
+            cells = row.find_all('div', class_='css_jobsAdvCell')
+            row_data = [cell.get_text(strip=True) for cell in cells]
+            data.append(row_data)
+
+        # Create DataFrame from extracted data with dynamic column names
+        df = pd.DataFrame(data, columns=column_names)
 
         # Print DataFrame
         print("DataFrame from extracted table data:")
