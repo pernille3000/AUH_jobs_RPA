@@ -1,50 +1,44 @@
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 import pandas as pd
 
 def main():
-    # Launch Chrome
+    # Launch Chrome and open the website
     driver = webdriver.Chrome()
-
-    # Open the website
     url = "https://midtjob.dk/ledige-jobs"
     driver.get(url)
 
     try:
-        # Find the table element by class name
-        table_element = driver.find_element(By.CLASS_NAME, 'css_jobsAdvTable')
+        # Get the page source and parse it with BeautifulSoup
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-        # Extract the outer HTML content of the table element
-        table_html = table_element.get_attribute('outerHTML')
-    
-        # Parse HTML content using BeautifulSoup
-        soup = BeautifulSoup(table_html, 'html.parser')
+        # Find all job rows
+        job_rows = soup.find_all('div', class_='css_jobsAdvRow')
 
-        # Find column names (assuming they are in the first row)
-        column_names = []
-        header_row = soup.find('div', class_='css_jobsAdvRow')
-        if header_row:
-            columns = header_row.find_all('div', class_='css_jobsAdvCell') 
-            column_names = [col.get_text(strip=True) for col in columns]
+        # Extract all column names from the first row
+        first_row = job_rows[0]
+        column_names = [cell.get_text(strip=True) for cell in first_row.find_all('div', class_='css_jobsAdvCell')[:-1]]
 
-        # Find all table rows containing data
-        data_rows = soup.find_all('div', class_='css_jobsAdvRow')
-
-        # Extract data from each row
+        # Extract data from each job row
         data = []
-        for row in data_rows:
-            cells = row.find_all('div', class_='css_jobsAdvCell')
+        for row in job_rows[1:]:
+            cells = row.find_all('div', class_='css_jobsAdvCell')[:-1]
             row_data = [cell.get_text(strip=True) for cell in cells]
+            # Remove column names from cell values
+            for i, cell_value in enumerate(row_data):
+                for col_name in column_names: 
+                    row_data[i] = row_data[i].replace(col_name, '').strip()
             data.append(row_data)
 
-        # Create DataFrame from extracted data with dynamic column names
-        df = pd.DataFrame(data, columns=column_names)
+        # Create DataFrame from extracted data
+        df = pd.DataFrame(data, columns = column_names)
+
+        # Export to excel
+        df.to_excel("job_listings.xlsx", index=False) 
 
         # Print DataFrame
-        print("DataFrame from extracted table data:")
-        print(df)
-
+        print("DataFrame exported to excel from extracted table data")
+        
     except Exception as e:
         print("Error occurred:", str(e))
 
