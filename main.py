@@ -9,6 +9,16 @@ def main():
     driver.get(url)
 
     try:
+        while True:
+            try:
+                # Find the "vis flere jobs" button and click on it
+                vis_flere_button = driver.find_element(By.XPATH, '/html/body/div[1]/div[1]/div[2]/div[3]/a')
+                vis_flere_button.click()
+                time.sleep(2)  # Adjust the sleep time as needed
+            except:
+                # Break the loop if the button is no longer visible
+                break
+    
         # Get the page source and parse it with BeautifulSoup
         soup = BeautifulSoup(driver.page_source, 'html.parser')
 
